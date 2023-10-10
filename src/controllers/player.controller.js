@@ -1,17 +1,8 @@
 const Response = require("../utils/response");
 const APIError = require("../utils/errors");
 var axios = require('axios');
-const fs =require('fs')
-const knex = require('knex')({
-  client: 'mysql',
-  connection: {
-    host : 'localhost',
-    port:3306,
-    database:'idsscout',
-    user:'root',
-    password: 'okkabas1034'
-  }
-});
+const config = require('config')
+const knex = require('knex')(config.db)
 
 
 // const User = require("../models/user.model");
@@ -56,58 +47,46 @@ const getPlayerStatistics = async (req, res) => {
 };
 
 const savePlayerStatistics = async (req, res) => {
-  const axios = require('axios');
+  let getPlayers=config.axiosConfig;
+  getPlayers.url=config.axiosUrl+"players"
+  getPlayers.params=req.query;
+    axios(getPlayers)
+    .then(function (response) {
+   console.log(response.data)
+   var cardsInfo={};
+   var dribblesInfo={};
+   var foulsInfo={};
+   var gameInfo={};
+   var goalsInfo={};
+   var passesInfo={};
+   var penaltiesInfo={};
+   var shotsInfo={};
+   var tacklesInfo={};
+   var teamsInfo={};
+   var cardsInfo={};
 
-  const getTeams = {
-    method: 'GET',
-    url: 'https://api-football-v1.p.rapidapi.com/v3/teams',
-    params: {league: '39',season:'2021'},
-    headers: {
-      'X-RapidAPI-Key': '2311440ef4msh5382e24b9c13ac9p104c14jsn49e71926e347',
-      'X-RapidAPI-Host': 'api-football-v1.p.rapidapi.com'
-    }
-  };
-  var mappedData=[];
-  fs.readFile('teamsEngland.json', "utf8", (err, data) => {
-    if (err) {
-      console.error("Error reading file:", err);
-      return;
-    }
-  
-    // Process the file data here.
-  data = JSON.parse(data)
-  mappedData = data.response.map((item) => {
-      return item.team
-    });
-  knex('general_team_info')
-  .insert(mappedData)
-  .then((ids) => {
-    console.log(`Inserted ${ids.length} teams`);
-    return new Response(ids).success(res);
-  })
-  .catch((error) => {
-    console.error('Error inserting teams:', error);
+   for (let index = 0; index < response.data.response.length; index++) {
+    const element = array[index];
+    
+   }
+    // mappedData = response.data.response.map((item) => {
+    //   return item.team
+    // });
+    // knex('general_team_info')
+    // .insert(mappedData)
+    // .then((ids) => {
+    // console.log(`Inserted ${ids.length} teams`);
+    // return new Response(ids).success(res);
+    // })
+    // .catch((error) => {
+    // console.error('Error inserting teams:', error);
+    // throw new APIError("Error!", 400);
+    // })
+    })
+   .catch(function (error) {
+    console.log(error);
     throw new APIError("Error!", 400);
-  })
-  });
-
-  
-// axios(config)
-// .then(function (response) {
-//   console.log(JSON.stringify(response.data));
-//   const data = JSON.stringify(response.data)
-//   fs.writeFile('teamsEngland.json', data, (err) => {
-//     if (err) {
-//       console.error("Error saving JSON data:", err);
-//     } else {
-//       console.log("JSON data saved to data.json");
-//     }
-//   });
-//   return new Response(data).success(res);
-// })
-// .catch(function (error) {
-//   console.log(error);
-// });
+   });
 
 };
 

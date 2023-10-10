@@ -27,9 +27,10 @@ const saveLeague = async (req, res) => {
     });
     console.log(mappedData)
     knex('general_league_info')
-    .insert(mappedData)
+    .insert(mappedData).returning('*')
     .then((ids) => {
     console.log(`Inserted ${ids.length} leagues`);
+    console.log(ids);
     return new Response(ids).success(res);
     })
     .catch((error) => {
