@@ -11,6 +11,8 @@ const knex = require('knex')(config.db)
 
 const getPlayerStatistics = async (req, res) => {
   try {
+
+    
     // const email = req.body.email;
     // const user = req.user;
     // const tempUser = await User.findOne({ email: email });
