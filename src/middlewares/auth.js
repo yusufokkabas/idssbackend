@@ -1,18 +1,17 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/user.model");
 const APIError = require("../utils/errors");
 
 const createToken = async (user, res) => {
   const payload = {
-    sub: user._id,
+    sub: user.id,
     name: user.name,
   };
-
-  const token = await jwt.sign(payload, process.env.JWT_SECRET_KEY, {
+  let secret_key = 'B59BCFC5C72AF81B900D3F20FA41BC13DAEF9A4107B0A608613C2D5E20B7AE15'
+  let expiresIn = '10m'
+  const token = await jwt.sign(payload, secret_key, {
     algorithm: "HS512",
-    expiresIn: process.env.JWT_EXPIRES_IN,
+    expiresIn: expiresIn,
   });
-
   return res.status(201).json({
     success: true,
     token,
@@ -24,33 +23,31 @@ const createToken = async (user, res) => {
 const tokenCheck = async (req, res, next) => {
   const token = req.header("Authorization").replace("Bearer ", "");
   if (!token) throw new APIError("Invalid session. Please sign in!", 401);
-
-  await jwt.verify(token, process.env.JWT_SECRET_KEY, async (err, decoded) => {
+  let secret_key = 'B59BCFC5C72AF81B900D3F20FA41BC13DAEF9A4107B0A608613C2D5E20B7AE15'
+  await jwt.verify(token, secret_key, async (err, decoded) => {
     if (err) throw new APIError("Invalid token.", 401);
 
-    const userInfo = await User.findById(decoded.sub).select(
-      "_id name lastname email"
-    );
+    //const userInfo = burada dbde user aratmamız gerekli
 
-    if (!userInfo) throw new APIError("Invalid token.", 401);
+    //if (!userInfo) throw new APIError("Invalid token.", 401);
 
-    req.user = userInfo;
-
+    //req.user = userInfo;
+    req.user = 'test'
     next();
   });
 };
 
 const verifyEmail = async (req, res, next) => {
-  try {
-    const user = await User.findOne({ email: req.body.email });
-    if (user.isVerified) {
-      next();
-    } else {
-      throw new APIError("Please check your email to verify your account", 401);
-    }
-  } catch (error) {
-    throw new APIError("No user found", 401);
-  }
+  // try {
+  //   const user = await User.findOne({ email: req.body.email });
+  //   if (user.isVerified) {
+  //     next();
+  //   } else {
+  //     throw new APIError("Please check your email to verify your account", 401);
+  //   }
+  // } catch (error) {
+  //   throw new APIError("No user found", 401);
+  // }
 };
 
 module.exports = {
