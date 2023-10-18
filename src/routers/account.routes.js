@@ -1,5 +1,5 @@
 const router = require("express").Router();
-
+const { tokenCheck,verifyEmail } = require("../middlewares/auth");
 const {
     login,
     register,
@@ -7,11 +7,11 @@ const {
     update
 } = require("../controllers/account.controller");
 
-
-router.post("/register", register);
+router.post("/register",register);
 router.post("/login", login);
-router.get("/get",get)
-router.post("/update",update)
+router.get("/get",get);
+router.post("/update",update);
+router.get("/test",tokenCheck);
 
 
 module.exports = router;
