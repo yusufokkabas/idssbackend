@@ -9,7 +9,7 @@ const {
 
 router.post("/register",register);
 router.post("/login", login);
-router.get("/get",get);
+router.get("/get",tokenCheck,get);
 router.post("/update",update);
 router.get("/test",tokenCheck);
 

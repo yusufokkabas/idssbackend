@@ -1,6 +1,4 @@
 const jwt = require("jsonwebtoken");
-const APIError = require("../utils/errors");
-const Response = require("../utils/response");
 const config = require('config')
 const knex = require('knex')(config.db)
 const createToken = async (user, res) => {
@@ -20,37 +18,68 @@ const createToken = async (user, res) => {
   });
 };
 
-const tokenCheck = async (req, res) => {
+const tokenCheck = async (req, res,next) => {
   try {
   const token = req.header("Authorization")?.replace("Bearer ", "");
   if (!token) {
-    throw new APIError("Invalid session. Please sign in!", 401);
+    res.status(401).json({
+      success: false,
+      message: "Invalid session. Please sign-in!",
+    });
+    return;
   }
   jwt.verify(token, config.SECRET_KEY, async (err, decoded) => {
-    if (err) throw new APIError("Invalid token.", 401);
-    console.log(decoded)
-    const userInfo = await knex('users').select('username').where('id',decoded.sub)
-    console.log(userInfo)
-    if (userInfo.length==0) throw new APIError("Invalid token.", 401);
+    if (err){ 
+      res.status(401).json({
+      success: false,
+      message: "Invalid Token",
+      });
+      return;
+    }
+    let sub = decoded?.sub
+    if(sub==undefined){
+      res.status(401).json({
+        success: false,
+        message: "Invalid Token",
+      });
+      return;
+    }
+    const userInfo = await knex('users').select('username').where('id',sub)
+    if (userInfo.length==0) {
+      res.status(401).json({
+        success: false,
+        message: "Invalid Token",
+      });
+      return;
+    }
     req.user = userInfo[0];
-    //next();
-    return new Response("verification ok").success(res);
+    next();
   });
 } catch (error) {
-  throw new APIError(error, 400);
+  res.status(400).json({
+    success: false,
+    message: error,
+  });
+  return;
 }
 };
 
 const verifyEmail = async (req, res, next) => {
-  // try {
-  //   const user = await User.findOne({ email: req.body.email });
+  //try {
+  //const user = await User.findOne({ email: req.body.email });
   //   if (user.isVerified) {
   //     next();
   //   } else {
-  //     throw new APIError("Please check your email to verify your account", 401);
+  //     throw res.status(401).json({
+  //       success: false,
+  //       message: "Please check your email to verify your account!",
+  //     });
   //   }
   // } catch (error) {
-  //   throw new APIError("No user found", 401);
+  //   throw res.status(401).json({
+  //     success: false,
+  //     message: "No user found!",
+  //   });
   // }
 };
 
