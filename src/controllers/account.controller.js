@@ -6,8 +6,7 @@ const Response = require("../utils/response");
 const { createToken } = require("../middlewares/auth");
 const nodemailer = require("nodemailer");
 const config = require('config')
-const knex = require('knex')(config.db)
-const db = require('../../models')
+const db = require('../../models');
 // TODO: Cretea mail sender on register via gmail
 // let transporter = nodemailer.createTransport({
 //   host: "smtp.gmail.com",
@@ -32,14 +31,14 @@ const login = async (req, res) => {
   try{
   let username = req.body.username;
   let password = req.body.password;
-  const userInfo = await knex('users').select('id','username','password').where('username',username)//dbde user kontrolü 
-  if (userInfo.length!=1) throw new APIError("Email or password is incorrect!", 401);
+  const userInfo = await db.User.findOne({where: {username:username}});
+  if (userInfo==null) throw new APIError("Email or password is incorrect!", 401);
   const validatedUser = await bcrypt.compare(
     password,
-    userInfo[0].password
+    userInfo.password
   );
   if (!validatedUser) throw new APIError("Email or password is incorrect!", 401);
-  createToken(userInfo[0], res);
+  createToken(userInfo, res);
   } catch (error) {
     throw new APIError(error, 400);
   } 
