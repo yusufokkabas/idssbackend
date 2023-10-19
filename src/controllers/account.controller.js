@@ -7,9 +7,8 @@ const { createToken } = require("../middlewares/auth");
 const nodemailer = require("nodemailer");
 const config = require('config')
 const knex = require('knex')(config.db)
-const User = require('../models/user.model');
-const { userInfo } = require("os");
-
+const db = require('../../models')
+// TODO: Cretea mail sender on register via gmail
 // let transporter = nodemailer.createTransport({
 //   host: "smtp.gmail.com",
 //   port: 465,
@@ -39,8 +38,7 @@ const login = async (req, res) => {
     password,
     userInfo[0].password
   );
-  if (!validatedUser)
-    throw new APIError("Email or password is incorrect!", 401);
+  if (!validatedUser) throw new APIError("Email or password is incorrect!", 401);
   createToken(userInfo[0], res);
   } catch (error) {
     throw new APIError(error, 400);
@@ -55,28 +53,29 @@ const register = async (req, res) => {
     surname = surname.trim();
     email = email.trim();
     password = password.trim();
-    const usernameCheck = await knex('users').select('username').where('username',username);
-    const emailCheck = await knex('users').select('email').where('email',email);
-    if (emailCheck.length>0||usernameCheck.length>0) {
+    const usernameCheck = await db.User.findOne({where: {username:username}});
+    console.log(usernameCheck);
+    const emailCheck = await db.User.findOne({where: {email:email}});
+    console.log(emailCheck);
+    if (emailCheck||usernameCheck) {
       throw new APIError("Mail or Username is already on use!", 401);
     }
-
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
     const user = {
       username:username,
       name:name,
       surname:surname,
       email:email,
-      password:password,
+      password:hashedPassword,
       //emailToken: crypto.randomBytes(64).toString("hex"),
     };
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(user.password, salt);
-    user.password = hashedPassword;
-    knex('users')
-    .insert(user).returning('*')
-    .then((savedUser) => {
-    return new Response(savedUser).success(res);
-    })
+    
+    // Inserting user into database
+     const newUser = await db.User.create(user)
+     .then((savedUser) => {
+      return new Response(savedUser).success(res);
+     });
 
     // const mailOptions = {
     //   from: process.env.AUTH_EMAIL,
