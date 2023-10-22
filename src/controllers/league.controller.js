@@ -34,6 +34,7 @@ const saveLeague = async (req, res) => {
 }
 
 const getLeague = async (req, res) => {
+  //TODO: write this function to get leagues by all the filters
   try {
     const { id } = req.query;
     const leagueInfo = await league.findOne({where: {id:id}});

@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const config = require('config')
-const knex = require('knex')(config.db)
+const db = require('../../models');
+const User = db.User;
 const createToken = async (user, res) => {
   const payload = {
     sub: user.id,
@@ -44,16 +45,24 @@ const tokenCheck = async (req, res,next) => {
       });
       return;
     }
-    const userInfo = await knex('users').select('username').where('id',sub)
-    if (userInfo.length==0) {
+    try {
+      const userInfo = await User.findByPk(sub);
+      if (userInfo==null) {
+        res.status(401).json({
+          success: false,
+          message: "Invalid Token",
+        });
+        return;
+      }
+      req.user = userInfo.username;
+      next();
+    } catch (error) {
       res.status(401).json({
         success: false,
         message: "Invalid Token",
       });
-      return;
+      return; 
     }
-    req.user = userInfo[0];
-    next();
   });
 } catch (error) {
   res.status(400).json({

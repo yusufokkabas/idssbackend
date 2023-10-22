@@ -2,57 +2,33 @@ const Response = require("../utils/response");
 const APIError = require("../utils/errors");
 var axios = require('axios');
 const config = require('config')
-const knex = require('knex')(config.db);
+const db = require("../../models");
+const team = db.general_team_info;
 
-// const User = require("../models/user.model");
-// const Company = require("../models/playerStatistics.model");
-// const CompanyInviteReq = require("../models/companyInviteReq.modal");
+
 const saveTeams = async (req, res) => {  
-    var getTeams = config.axiosConfig;
-    getTeams.url = config.axiosUrl+"teams";
+  try {
+    var getTeams = config.AXIOS_CONFIG;
+    getTeams.url = config.AXIOS_URL+"teams";
     getTeams.params=req.query;
-    console.log(getTeams)
-    axios(getTeams)
-    .then(function (response) {
-    console.log(response)
-    mappedData = response.data.response.map((item) => {
+    const teamInfo = await axios(getTeams);
+    mappedData = teamInfo.data.response.map((item) => {
+      item.team.league_id = req.query.league;
       return item.team
     });
-    knex('general_team_info')
-    .insert(mappedData)
-    .then((ids) => {
-    console.log(`Inserted ${ids.length} teams`);
-    return new Response(ids).success(res);
+    const result = await team.bulkCreate(mappedData)
+    .then(function(data){ 
+      return new Response(`Successfully inserted ${data.length} records.`).success(res); 
     })
-    .catch((error) => {
-    console.error('Error inserting teams:', error);
-    throw new APIError("Error!", 400);
-    })
-    })
-   .catch(function (error) {
-    console.log(error);
-    throw new APIError("Error!", 400);
-   });
-  
-  
+  } catch (error) {
+    throw new APIError(error, 400);
+  }
   };
   
 
 const getTeams = async (req, res) => {
-  try {
-    knex('general_team_info').where(req.query)
-    .select('*')
-    .then((teams) => {
-      return res.json(teams);
-    })
-    .catch((err) => {
-      console.error(err);
-      return res.json({success: false, message: 'An error occurred, please try again later.'});
-    })  
-  } catch (error) {
-    console.log(error);
-    throw new APIError("Error!", 400);
-  }
+   //TODO: write this function to get teams by all the filters
+
 };
 
 
