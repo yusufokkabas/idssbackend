@@ -5,7 +5,6 @@ const port = process.env.PORT || 5001;
 const router = require("./src/routers");
 const errorHandlerMiddleware = require("./src/middlewares/errorHandler");
 const cors = require("cors");
-const c = require("config");
 // Middleware
 app.use(express.json());
 app.use(express.json({ limit: "50mb" }));
