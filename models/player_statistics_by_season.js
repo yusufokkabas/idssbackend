@@ -91,7 +91,14 @@ module.exports = (sequelize, DataTypes) => {
         model: 'teams',
         key: 'id'
       }
-    }
+    },
+    substitutes_id: {
+      type:DataTypes.INTEGER,
+      references: {
+        model: 'substitutes',
+        key: 'id'
+      }
+    },
   }, {
     sequelize,
     modelName: 'player_statistics_by_season',

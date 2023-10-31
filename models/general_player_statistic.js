@@ -14,15 +14,22 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   general_player_statistic.init({
-    season: DataTypes.STRING,
+    id: {
+      type:DataTypes.INTEGER,
+      primaryKey: true
+    },
+    season: {
+      type:DataTypes.INTEGER,
+      primaryKey: true
+    },
     name: DataTypes.STRING,
     first_name: DataTypes.STRING,
     last_name: DataTypes.STRING,
     age: DataTypes.INTEGER,
     nationality: DataTypes.STRING,
-    height: DataTypes.INTEGER,
-    weight: DataTypes.INTEGER,
-    injured: DataTypes.INTEGER,
+    height: DataTypes.STRING,
+    weight: DataTypes.STRING,
+    injured: DataTypes.BOOLEAN,
     photo: DataTypes.STRING,
     statistics_id: {
       type:DataTypes.INTEGER,

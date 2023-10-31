@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   dribble.init({
-    attemps: DataTypes.INTEGER,
+    attempts: DataTypes.INTEGER,
     success: DataTypes.INTEGER
   }, {
     sequelize,

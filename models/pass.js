@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   pass.init({
     total: DataTypes.INTEGER,
-    key_passes: DataTypes.INTEGER,
+    key: DataTypes.INTEGER,
     accuracy: DataTypes.INTEGER
   }, {
     sequelize,

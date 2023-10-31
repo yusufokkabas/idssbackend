@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   shot.init({
     total: DataTypes.INTEGER,
-    on_target: DataTypes.INTEGER
+    on: DataTypes.INTEGER
   }, {
     sequelize,
     modelName: 'shot',
