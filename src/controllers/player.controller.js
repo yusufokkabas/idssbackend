@@ -15,21 +15,94 @@ const sequelize = new Sequelize({
 
 const getPlayerStatistics = async (req, res) => {
   try {
-    
+    const id = req.query.id;
+    const season = req.query.season;
+    const excludedFields = ['createdAt', 'updatedAt','id'];
+    // Use Sequelize to fetch player statistics with joins
+    const playerStatistics = await db.general_player_statistic.findOne({
+      where: { id, season },
+      attributes:{exclude: 'statistics_id'},
+      include: [
+        {
+          model: db.player_statistics_by_season,
+          as: 'statistics',
+          attributes: ['createdAt', 'updatedAt'],
+          include: [
+            {
+              model: db.game_info,
+              as: 'game_infos',
+              attributes:{exclude: excludedFields},
+            },
+            {
+              model: db.duel,
+              as: 'duels',
+              attributes:{exclude: excludedFields},
+            },
+            {
+              model: db.foul,
+              as: 'fouls',
+              attributes:{exclude: excludedFields},
+            },
+            {
+              model: db.card,
+              as: 'cards',
+              attributes:{exclude: excludedFields},
+            },
+            {
+              model: db.dribble,
+              as: 'dribbles',
+              attributes:{exclude: excludedFields},
+            },
+            {
+              model: db.goal,
+              as: 'goals',
+              attributes:{exclude: excludedFields},
+            },
+            {
+              model: db.pass,
+              as: 'passes',
+              attributes:{exclude: excludedFields},
+            },
+            {
+              model: db.penalty,
+              as: 'penalties',
+              attributes:{exclude: excludedFields},
+            },
+            {
+              model: db.shot,
+              as: 'shots',
+              attributes:{exclude: excludedFields},
+            },
+            {
+              model: db.substitute,
+              as: 'substitutes',
+              attributes:{exclude: excludedFields},
+            },
+            {
+              model: db.tackle,
+              as: 'tackles',
+              attributes:{exclude: excludedFields},
+            },
+            {
+              model: db.team,
+              as: 'teams',
+              attributes:{exclude: excludedFields},
+            }
+          ],
+        },
+        
+      ],
+    });
+    if (!playerStatistics) {
+      return res.status(404).json({ error: 'Player statistics not found' });
+    }
+
+    return new Response(playerStatistics).success(res);
   } catch (error) {
-    console.log(error);
-    throw new APIError("Error!", 400);
+    console.error(error);
+    throw new APIError(error, 400);
   }
 };
-function sumPropertiesOfObjects(arr, propertyNames) {
-  const sums = {};
-  
-  propertyNames.forEach(propertyName => {
-    sums[propertyName] = arr.reduce((accumulator, currentValue) => accumulator + currentValue[propertyName], 0);
-  });
-  
-  return sums;
-}
 
 const savePlayerStatistics = async (req, res) => {
   try {
@@ -67,7 +140,7 @@ const savePlayerStatistics = async (req, res) => {
         penalty: {},
         substitutes: {}
       };
-      statisticsData.teams.id = item.statistics[0].team.team_id;
+      statisticsData.teams.team_id = item.statistics[0].team.id;
       statisticsData.teams.name = item.statistics[0].team.name;
       statisticsData.teams.logo = item.statistics[0].team.logo;
       statisticsData.games.position = item.statistics[0].games.position;
@@ -77,12 +150,13 @@ const savePlayerStatistics = async (req, res) => {
       let count=0;
       item.statistics.forEach((element) => {
        if(element.games.rating!=null){
-        let rating = parseFloat(element.games.rating);
+        let rating = parseFloat(parseFloat(element.games.rating).toFixed(3));
         ratingTotal=ratingTotal+rating;
         count++;
        }    
       });
       let avgRating = ratingTotal/count;
+      avgRating = parseFloat(avgRating.toFixed(3));
       statisticsData.games.rating = avgRating;
       sumElements = ['games.appearences','games.lineups','games.minutes','substitutes.in','substitutes.out','substitutes.bench','shots.total','shots.on','goals.total','goals.conceded','goals.assists','goals.saves','passes.total','passes.key','passes.accuracy','tackles.total','tackles.blocks','tackles.interceptions','duels.total','duels.won','dribbles.attempts','dribbles.success','fouls.drawn','fouls.committed','cards.yellow','cards.yellowred','cards.red','penalty.won','penalty.committed','penalty.scored','penalty.missed','penalty.saved'];
       sumElements = sumElements.map((item) => {
@@ -95,42 +169,49 @@ const savePlayerStatistics = async (req, res) => {
       });
       return statisticsData; 
     });
-    const bulkInsertResult = await mappedData.forEach(async (element) => {
-      const result = await sequelize.transaction(async () => {
-        const cards = await db.card.create(element.cards);
-        const dribbles = await db.dribble.create(element.dribbles);
-        const duels = await db.duel.create(element.duels);
-        const fouls = await db.foul.create(element.fouls);
-        const game_infos = await db.game_info.create(element.games);
-        const goals = await db.goal.create(element.goals);
-        const passes = await db.pass.create(element.passes);
-        const penalty = await db.penalty.create(element.penalty);
-        const shots = await db.shot.create(element.shots);
-        const tackles = await db.tackle.create(element.tackles);
-        const teams = await db.team.create(element.teams);
-        const substitutes = await db.substitute.create(element.substitutes);
-        let player_statistics_by_seasons = {
-          shots_id: shots.id,
-          goals_id: goals.id,
-          passes_id: passes.id,
-          tackles_id: tackles.id,
-          duels_id: duels.id,
-          dribbles_id: dribbles.id,
-          fouls_id: fouls.id,
-          cards_id: cards.id,
-          penalties_id: penalty.id,
-          substitutes_id: substitutes.id,
-          game_infos_id: game_infos.id,
-          teams_id: teams.id,
-        };
-        const player_statistics_by_season = await db.player_statistics_by_season.create(player_statistics_by_seasons);
-        let general_player_statistics_data =  element.general_player_statistics;
-        general_player_statistics_data.statistics_id = player_statistics_by_season.id;
-        const general_player_statistics = await db.general_player_statistic.create(general_player_statistics_data);
-        return general_player_statistics;
-      });
-      return result;
-    });
+    for(i=0;i<mappedData.length;i++){
+        var bulkInsertResult = [];
+        const element = mappedData[i];
+        try {
+          const result = await sequelize.transaction(async () => {
+            const cards = await db.card.create(element.cards);
+            const dribbles = await db.dribble.create(element.dribbles);
+            const duels = await db.duel.create(element.duels);
+            const fouls = await db.foul.create(element.fouls);
+            const game_infos = await db.game_info.create(element.games);
+            const goals = await db.goal.create(element.goals);
+            const passes = await db.pass.create(element.passes);
+            const penalty = await db.penalty.create(element.penalty);
+            const shots = await db.shot.create(element.shots);
+            const tackles = await db.tackle.create(element.tackles);
+            const teams = await db.team.create(element.teams);
+            const substitutes = await db.substitute.create(element.substitutes);
+            let player_statistics_by_seasons = {
+              shots_id: shots.id,
+              goals_id: goals.id,
+              passes_id: passes.id,
+              tackles_id: tackles.id,
+              duels_id: duels.id,
+              dribbles_id: dribbles.id,
+              fouls_id: fouls.id,
+              cards_id: cards.id,
+              penalties_id: penalty.id,
+              substitutes_id: substitutes.id,
+              game_infos_id: game_infos.id,
+              teams_id: teams.id,
+            };
+            const player_statistics_by_season = await db.player_statistics_by_season.create(player_statistics_by_seasons);
+            let general_player_statistics_data =  element.general_player_statistics;
+            general_player_statistics_data.statistics_id = player_statistics_by_season.id;
+            const general_player_statistics = await db.general_player_statistic.create(general_player_statistics_data);
+            return general_player_statistics;
+            });
+        bulkInsertResult.push(result);
+        } catch (error) {
+          console.log(error);
+          throw new APIError(error, 400);
+        }
+    }
     return new Response(bulkInsertResult).success(res);
   } catch (error) {
     console.log(error);

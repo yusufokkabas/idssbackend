@@ -126,7 +126,7 @@ const verifyemail = async (req, res) => {
 };
 
 const get = async (req, res) => {
-    
+    console.log("success")
   };
 
 const update = async (req, res) => {
