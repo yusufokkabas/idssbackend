@@ -13,15 +13,13 @@ const sequelize = new Sequelize({
   database: sequelizeConfig.development.database,
 });
 
-const getPlayerStatistics = async (req, res) => {
+const getPlayerStatistics = async (req, res,next) => {
   try {
-    const id = req.query.id;
-    const season = req.query.season;
+    const { queryBuilder } = req;
     const excludedFields = ['createdAt', 'updatedAt','id'];
-    // Use Sequelize to fetch player statistics with joins
-    const playerStatistics = await db.general_player_statistic.findOne({
-      where: { id, season },
-      attributes:{exclude: 'statistics_id'},
+    const playerStatistics = await db.general_player_statistic.findAll({
+      where:  queryBuilder.filters,
+      attributes:{exclude: ['statistics_id','createdAt', 'updatedAt']},
       include: [
         {
           model: db.player_statistics_by_season,
@@ -112,6 +110,7 @@ const savePlayerStatistics = async (req, res) => {
     getPlayerStatistics.url = config.AXIOS_URL+"players";
     getPlayerStatistics.params=req.query;
     const playerStatistics = await axios(getPlayerStatistics);
+    console.log(playerStatistics)
     mappedData = await playerStatistics.data.response.map((item) => {
       let statisticsData = {
         general_player_statistics: {
@@ -148,16 +147,29 @@ const savePlayerStatistics = async (req, res) => {
       statisticsData.games.captain = item.statistics[0].games.captain;
       let ratingTotal=0;
       let count=0;
-      item.statistics.forEach((element) => {
-       if(element.games.rating!=null){
-        let rating = parseFloat(parseFloat(element.games.rating).toFixed(3));
-        ratingTotal=ratingTotal+rating;
-        count++;
-       }    
-      });
+      // item.statistics.forEach((element) => {
+      //  if(element.games.rating!=null){
+      //   let rating = parseFloat(parseFloat(element.games.rating).toFixed(3));
+      //   ratingTotal=ratingTotal+rating;
+      //   count++;
+      //  }    
+      // });
+      for(i=0;i<item.statistics.length;i++){
+        if(item.statistics[i].games.rating!=null){
+          let rating = parseFloat(parseFloat(item.statistics[i].games.rating).toFixed(3));
+          ratingTotal=ratingTotal+rating;
+          count++;
+        }
+      }
       let avgRating = ratingTotal/count;
       avgRating = parseFloat(avgRating.toFixed(3));
+      if(!isNaN(avgRating)){
       statisticsData.games.rating = avgRating;
+      }
+      else{
+        statisticsData.games.rating = 0;
+      }
+      console.log(statisticsData.games.rating,statisticsData.general_player_statistics.name);
       sumElements = ['games.appearences','games.lineups','games.minutes','substitutes.in','substitutes.out','substitutes.bench','shots.total','shots.on','goals.total','goals.conceded','goals.assists','goals.saves','passes.total','passes.key','passes.accuracy','tackles.total','tackles.blocks','tackles.interceptions','duels.total','duels.won','dribbles.attempts','dribbles.success','fouls.drawn','fouls.committed','cards.yellow','cards.yellowred','cards.red','penalty.won','penalty.committed','penalty.scored','penalty.missed','penalty.saved'];
       sumElements = sumElements.map((item) => {
         return item.split('.');
@@ -169,8 +181,8 @@ const savePlayerStatistics = async (req, res) => {
       });
       return statisticsData; 
     });
+    var bulkInsertResult = [];
     for(i=0;i<mappedData.length;i++){
-        var bulkInsertResult = [];
         const element = mappedData[i];
         try {
           const result = await sequelize.transaction(async () => {
@@ -208,14 +220,17 @@ const savePlayerStatistics = async (req, res) => {
             });
         bulkInsertResult.push(result);
         } catch (error) {
-          console.log(error);
-          throw new APIError(error, 400);
+          console.log(error)
+          if(error.name != 'SequelizeUniqueConstraintError'){
+            throw new APIError(error, 400);
+          }        
         }
     }
     return new Response(bulkInsertResult).success(res);
   } catch (error) {
-    console.log(error);
-    throw new APIError(error, 400);
+    if(error.name != 'SequelizeUniqueConstraintError'){
+      throw new APIError(error, 400);
+    } 
   }
 };
 

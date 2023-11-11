@@ -5,10 +5,11 @@ const {
   savePlayerStatistics,
   updatePlayerStatistics,
 } = require("../controllers/player.controller");
+const createQuery = require("../middlewares/queryBuilder");
 
 
 router.post("/save", savePlayerStatistics);
-router.get("/get", getPlayerStatistics);
+router.get("/get",createQuery ,getPlayerStatistics);
 router.post("/update", updatePlayerStatistics);
 
 // router.post("/verifyotp", verifyotp);
