@@ -52,9 +52,9 @@ function getPlayerMarketValue(player){
         });
         let playerMarketValue = null;
         monthOrder = ["06","07","08","09","05","04","03","10","11","02","01","12"];
-        for(j=0;j<monthOrder.length;j++){
+        for(let j=0;j<monthOrder.length;j++){
         let month = monthOrder[j];
-        for(i=0;i<playerData.length;i++){
+        for(let i=0;i<playerData.length;i++){
           let item = playerData[i];
           if(item.date.includes(month)){
             playerMarketValue = item;
@@ -164,9 +164,9 @@ const savePlayerStatistics = async (req, res) => {
     var getPlayerStatistics = config.AXIOS_CONFIG;
     getPlayerStatistics.url = config.AXIOS_URL+"players";
     getPlayerStatistics.params=req.query;
-    const playerStatistics = await axios(getPlayerStatistics);
-    console.log(playerStatistics)
-    mappedData = await playerStatistics.data.response.map((item) => {
+    let playerStatistics = await axios(getPlayerStatistics);
+    for(let m=0;m<playerStatistics.data.paging.total;m++){
+    let mappedData = await playerStatistics.data.response.map((item) => {
       let statisticsData = {
         general_player_statistics: {
           id: item.player.id,
@@ -209,7 +209,7 @@ const savePlayerStatistics = async (req, res) => {
       //   count++;
       //  }    
       // });
-      for(i=0;i<item.statistics.length;i++){
+      for(let i=0;i<item.statistics.length;i++){
         if(item.statistics[i].games.rating!=null){
           let rating = parseFloat(parseFloat(item.statistics[i].games.rating).toFixed(3));
           ratingTotal=ratingTotal+rating;
@@ -224,7 +224,6 @@ const savePlayerStatistics = async (req, res) => {
       else{
         statisticsData.games.rating = 0;
       }
-      console.log(statisticsData.games.rating,statisticsData.general_player_statistics.name);
       sumElements = ['games.appearences','games.lineups','games.minutes','substitutes.in','substitutes.out','substitutes.bench','shots.total','shots.on','goals.total','goals.conceded','goals.assists','goals.saves','passes.total','passes.key','passes.accuracy','tackles.total','tackles.blocks','tackles.interceptions','duels.total','duels.won','dribbles.attempts','dribbles.success','fouls.drawn','fouls.committed','cards.yellow','cards.yellowred','cards.red','penalty.won','penalty.committed','penalty.scored','penalty.missed','penalty.saved'];
       sumElements = sumElements.map((item) => {
         return item.split('.');
@@ -236,23 +235,26 @@ const savePlayerStatistics = async (req, res) => {
       });
       return statisticsData; 
     });
+    
     var bulkInsertResult = [];
-    for(i=0;i<mappedData.length;i++){
+    for(let i=0;i<mappedData.length;i++){
         const element = mappedData[i];
         try {
-          const result = await sequelize.transaction(async () => {
-            const cards = await db.card.create(element.cards);
-            const dribbles = await db.dribble.create(element.dribbles);
-            const duels = await db.duel.create(element.duels);
-            const fouls = await db.foul.create(element.fouls);
-            const game_infos = await db.game_info.create(element.games);
-            const goals = await db.goal.create(element.goals);
-            const passes = await db.pass.create(element.passes);
-            const penalty = await db.penalty.create(element.penalty);
-            const shots = await db.shot.create(element.shots);
-            const tackles = await db.tackle.create(element.tackles);
-            const teams = await db.team.create(element.teams);
-            const substitutes = await db.substitute.create(element.substitutes);
+          transaction = await sequelize.transaction();
+          const result = await sequelize.transaction(async (t) => {
+            const options = { transaction: t };
+            const cards = await db.card.create(element.cards,options);
+            const dribbles = await db.dribble.create(element.dribbles,options);
+            const duels = await db.duel.create(element.duels,options);
+            const fouls = await db.foul.create(element.fouls,options);
+            const game_infos = await db.game_info.create(element.games,options);
+            const goals = await db.goal.create(element.goals,options);
+            const passes = await db.pass.create(element.passes,options);
+            const penalty = await db.penalty.create(element.penalty,options);
+            const shots = await db.shot.create(element.shots,options);
+            const tackles = await db.tackle.create(element.tackles,options);
+            const teams = await db.team.create(element.teams,options);
+            const substitutes = await db.substitute.create(element.substitutes,options);
             let player_statistics_by_seasons = {
               shots_id: shots.id,
               goals_id: goals.id,
@@ -267,7 +269,8 @@ const savePlayerStatistics = async (req, res) => {
               game_infos_id: game_infos.id,
               teams_id: teams.id,
             };
-            const player_statistics_by_season = await db.player_statistics_by_season.create(player_statistics_by_seasons);
+            console.log(player_statistics_by_seasons)
+            const player_statistics_by_season = await db.player_statistics_by_season.create(player_statistics_by_seasons,options);
             let general_player_statistics_data =  element.general_player_statistics;
             const marketValue= await getPlayerMarketValue(general_player_statistics_data);
             console.log("market Value",marketValue)
@@ -275,26 +278,37 @@ const savePlayerStatistics = async (req, res) => {
               general_player_statistics_data.market_value_in_eur = marketValue.market_value_in_eur;
               general_player_statistics_data.market_value_date = marketValue.date;
             }
-            else{
-              general_player_statistics_data.market_value_in_eur = null;
-              general_player_statistics_data.market_value_date = null;
-            }
             general_player_statistics_data.statistics_id = player_statistics_by_season.id;
-            const general_player_statistics = await db.general_player_statistic.create(general_player_statistics_data);
+            const general_player_statistics = await db.general_player_statistic.create(general_player_statistics_data,options);
             return general_player_statistics;
             });
+            await transaction.commit();
         bulkInsertResult.push(result);
         } catch (error) {
-          console.log(error)
+          if (transaction) await transaction.rollback();
           if(error.name != 'SequelizeUniqueConstraintError'){
+            if (Object.keys(error).length !== 0) {          
             throw new APIError(error, 400);
-          }        
+            }
+          }    
         }
+    }
+    console.log("paging",playerStatistics.data.paging);
+    if(playerStatistics.data.paging.total>playerStatistics.data.paging.current){
+      getPlayerStatistics.params.page=playerStatistics.data.paging.current+1;
+      console.log("page",getPlayerStatistics.params.page)
+      playerStatistics = await axios(getPlayerStatistics);
+    }
+    else{
+      break;
+    }
     }
     return new Response(bulkInsertResult).success(res);
   } catch (error) {
     if(error.name != 'SequelizeUniqueConstraintError'){
+      if (Object.keys(error).length !== 0) {
       throw new APIError(error, 400);
+      }
     } 
   }
 };
