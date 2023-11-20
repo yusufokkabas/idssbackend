@@ -126,6 +126,8 @@ const verifyemail = async (req, res) => {
 };
 
 const get = async (req, res) => {
+  //TODO: Get user information from database
+  
     console.log("success")
   };
 

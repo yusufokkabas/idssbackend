@@ -12,6 +12,49 @@ const sequelize = new Sequelize({
   password: sequelizeConfig.development.password,
   database: sequelizeConfig.development.database,
 });
+const csvtojson = require('csvtojson');
+const path = require('path');
+const fs = require('fs');
+const csv = require('csv-parser');
+
+function getPlayerMarketValue(player){
+  return new Promise((resolve, reject) => {
+    const csvFilePath = path.resolve(__dirname, 'valuations.csv');
+    const results = [];
+
+    fs.createReadStream(csvFilePath)
+      .pipe(csv())
+      .on('data', (row) => {
+        results.push(row);
+      })
+      .on('end', () => {
+        const playerData = results.filter((item) => {
+          if(item.name==player.name){
+            return true;
+          }
+          else if(item.first_name==player.first_name && item.last_name==player.last_name){
+            return true;
+          }
+          else if(item.first_name+" "+item.last_name==player.name){
+            return true;
+          }
+          else if(player.name.includes(".")){
+              let name = player.name.split(".");
+              name[1] = name[1].toString().trimStart();
+              let firstname= item.first_name.toString().toUpperCase();
+              if(firstname.startsWith(name[0]) && item.last_name==name[1]){
+                return true;
+              }      
+          }
+          else{
+            return false;
+          }
+        });
+        resolve(playerData);
+      })
+      .on('error', reject);
+  });
+}
 
 const getPlayerStatistics = async (req, res,next) => {
   try {
@@ -214,6 +257,7 @@ const savePlayerStatistics = async (req, res) => {
             };
             const player_statistics_by_season = await db.player_statistics_by_season.create(player_statistics_by_seasons);
             let general_player_statistics_data =  element.general_player_statistics;
+            const marketValue= await getPlayerMarketValue(general_player_statistics_data);
             general_player_statistics_data.statistics_id = player_statistics_by_season.id;
             const general_player_statistics = await db.general_player_statistic.create(general_player_statistics_data);
             return general_player_statistics;
@@ -236,7 +280,13 @@ const savePlayerStatistics = async (req, res) => {
 
 
 const updatePlayerStatistics = async (req, res) => {
- 
+  let data = {
+    name: "P. Kimpembe",
+    first_name: null,
+    last_name: null
+  }
+  const result = await getPlayerMarketValue(data);
+  console.log("result",result);
 };
 
 module.exports = {
