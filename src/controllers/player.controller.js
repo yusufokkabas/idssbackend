@@ -29,20 +29,20 @@ function getPlayerMarketValue(player){
       })
       .on('end', () => {
         const playerData = results.filter((item) => {
-          if(item.name==player.name){
+          if(item.name==player.name&&item.date.includes(player.season)){
             return true;
           }
-          else if(item.first_name==player.first_name && item.last_name==player.last_name){
+          else if(item.first_name==player.first_name && item.last_name==player.last_name&&item.date.includes(player.season)){
             return true;
           }
-          else if(item.first_name+" "+item.last_name==player.name){
+          else if(item.first_name+" "+item.last_name==player.name&&item.date.includes(player.season)){
             return true;
           }
           else if(player.name.includes(".")){
               let name = player.name.split(".");
               name[1] = name[1].toString().trimStart();
               let firstname= item.first_name.toString().toUpperCase();
-              if(firstname.startsWith(name[0]) && item.last_name==name[1]){
+              if(firstname.startsWith(name[0]) && item.last_name==name[1]&&item.date.includes(player.season)){
                 return true;
               }      
           }
@@ -50,7 +50,19 @@ function getPlayerMarketValue(player){
             return false;
           }
         });
-        resolve(playerData);
+        let playerMarketValue = null;
+        monthOrder = ["06","07","08","09","05","04","03","10","11","02","01","12"];
+        for(j=0;j<monthOrder.length;j++){
+        let month = monthOrder[j];
+        for(i=0;i<playerData.length;i++){
+          let item = playerData[i];
+          if(item.date.includes(month)){
+            playerMarketValue = item;
+            resolve(playerMarketValue);
+          }        
+        }       
+        }
+        reject({});
       })
       .on('error', reject);
   });
@@ -258,6 +270,15 @@ const savePlayerStatistics = async (req, res) => {
             const player_statistics_by_season = await db.player_statistics_by_season.create(player_statistics_by_seasons);
             let general_player_statistics_data =  element.general_player_statistics;
             const marketValue= await getPlayerMarketValue(general_player_statistics_data);
+            console.log("market Value",marketValue)
+            if(marketValue!=null&&marketValue.date!=null){
+              general_player_statistics_data.market_value_in_eur = marketValue.market_value_in_eur;
+              general_player_statistics_data.market_value_date = marketValue.date;
+            }
+            else{
+              general_player_statistics_data.market_value_in_eur = null;
+              general_player_statistics_data.market_value_date = null;
+            }
             general_player_statistics_data.statistics_id = player_statistics_by_season.id;
             const general_player_statistics = await db.general_player_statistic.create(general_player_statistics_data);
             return general_player_statistics;
@@ -283,7 +304,8 @@ const updatePlayerStatistics = async (req, res) => {
   let data = {
     name: "P. Kimpembe",
     first_name: null,
-    last_name: null
+    last_name: null,
+    season:"2021"
   }
   const result = await getPlayerMarketValue(data);
   console.log("result",result);

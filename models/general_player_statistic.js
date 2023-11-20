@@ -34,6 +34,8 @@ module.exports = (sequelize, DataTypes) => {
     weight: DataTypes.STRING,
     injured: DataTypes.BOOLEAN,
     photo: DataTypes.STRING,
+    market_value_in_eur: DataTypes.STRING,
+    market_value_date: DataTypes.STRING,
     statistics_id: {
       type:DataTypes.INTEGER,
       references: {
