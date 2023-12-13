@@ -8,8 +8,8 @@ const { tokenCheck } = require("../middlewares/auth");
 const createQuery = require("../middlewares/queryBuilder");
 
 
-router.get("/metrics", getModelMetrics);
-router.get("/player_prediction", getPlayerPrediction);
+router.get("/metrics", createQuery,getModelMetrics);
+router.get("/player_prediction",createQuery, getPlayerPrediction);
 
 
 module.exports = router;
