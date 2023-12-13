@@ -10,7 +10,7 @@ const createQuery = require("../middlewares/queryBuilder");
 
 
 router.post("/save", savePlayerStatistics);
-router.get("/get",tokenCheck,createQuery ,getPlayerStatistics);
+router.get("/get",createQuery ,getPlayerStatistics);
 router.post("/update", updatePlayerStatistics);
 
 // router.post("/verifyotp", verifyotp);

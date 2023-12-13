@@ -11,6 +11,7 @@ const sequelize = new Sequelize({
   username: sequelizeConfig.development.username,
   password: sequelizeConfig.development.password,
   database: sequelizeConfig.development.database,
+  logging: console.log
 });
 const csvtojson = require('csvtojson');
 const path = require('path');
@@ -72,7 +73,7 @@ const getPlayerStatistics = async (req, res,next) => {
   try {
     const { queryBuilder } = req;
     const excludedFields = ['createdAt', 'updatedAt','id'];
-    const playerStatistics = await db.general_player_statistic.findAll({
+    const options = {
       where:  queryBuilder.filters,
       attributes:{exclude: ['statistics_id','createdAt', 'updatedAt']},
       include: [
@@ -145,7 +146,8 @@ const getPlayerStatistics = async (req, res,next) => {
         },
         
       ],
-    });
+    };
+    const playerStatistics = await db.general_player_statistic.findAll(options);
     if (!playerStatistics) {
       return res.status(404).json({ error: 'Player statistics not found' });
     }
@@ -300,10 +302,9 @@ const savePlayerStatistics = async (req, res) => {
       playerStatistics = await axios(getPlayerStatistics);
     }
     else{
-      break;
+      return new Response(bulkInsertResult).success(res);
     }
     }
-    return new Response(bulkInsertResult).success(res);
   } catch (error) {
     if(error.name != 'SequelizeUniqueConstraintError'){
       if (Object.keys(error).length !== 0) {
