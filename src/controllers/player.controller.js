@@ -164,6 +164,9 @@ const savePlayerStatistics = async (req, res) => {
     var getPlayerStatistics = config.AXIOS_CONFIG;
     getPlayerStatistics.url = config.AXIOS_URL+"players";
     getPlayerStatistics.params=req.query;
+    let totalData=0;
+    let insertedData=0;
+    let notInsertedData=0;
     let playerStatistics = await axios(getPlayerStatistics);
     for(let m=0;m<playerStatistics.data.paging.total;m++){
     let mappedData = await playerStatistics.data.response.map((item) => {
@@ -236,7 +239,6 @@ const savePlayerStatistics = async (req, res) => {
       return statisticsData; 
     });
     
-    var bulkInsertResult = [];
     for(let i=0;i<mappedData.length;i++){
         const element = mappedData[i];
         try {
@@ -283,12 +285,15 @@ const savePlayerStatistics = async (req, res) => {
             return general_player_statistics;
             });
             await transaction.commit();
-        bulkInsertResult.push(result);
+        totalData++;
+        insertedData++;
         } catch (error) {
+          totalData++;
+          notInsertedData++;
           if (transaction) await transaction.rollback();
           if(error.name != 'SequelizeUniqueConstraintError'){
             if (Object.keys(error).length !== 0) {          
-            throw new APIError(error, 400);
+            throw new APIError(error, 400);          
             }
           }    
         }
@@ -300,10 +305,19 @@ const savePlayerStatistics = async (req, res) => {
       playerStatistics = await axios(getPlayerStatistics);
     }
     else{
-      break;
+      console.log({
+        "Total Data":totalData,
+        "Inserted Data":insertedData,
+        "Not Inserted Data":notInsertedData
+      });
+      return new Response({
+        "Total Data":totalData,
+        "Inserted Data":insertedData,
+        "Not Inserted Data":notInsertedData
+    }).success(res);
     }
     }
-    return new Response(bulkInsertResult).success(res);
+    
   } catch (error) {
     if(error.name != 'SequelizeUniqueConstraintError'){
       if (Object.keys(error).length !== 0) {
