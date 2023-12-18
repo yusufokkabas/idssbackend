@@ -27,7 +27,28 @@ const saveTeams = async (req, res) => {
   
 
 const getTeams = async (req, res) => {
-   //TODO: write this function to get teams by all the filters
+  try {
+    const { queryBuilder } = req;
+    const groupBy = queryBuilder.group;
+    const options = {
+      where:  queryBuilder.filters, 
+      include: [
+        {
+          model: db.general_league_info,
+          as: 'league'
+        },
+      ],
+      group:groupBy?.groupby?groupBy.groupby:null,   
+    };
+    const results = await team.findAll(options);
+    if (!results) {
+      return res.status(404).json({ error: 'Team not found!!' });
+    }
+    return new Response(results).success(res);
+  } catch (error) {
+    console.error(error);
+    throw new APIError(error, 400);
+  }
 
 };
 

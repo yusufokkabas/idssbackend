@@ -7,6 +7,7 @@ const { createToken } = require("../middlewares/auth");
 const nodemailer = require("nodemailer");
 const config = require('config')
 const db = require('../../models');
+const { response } = require("express");
 // TODO: Cretea mail sender on register via gmail
 // let transporter = nodemailer.createTransport({
 //   host: "smtp.gmail.com",
@@ -126,12 +127,49 @@ const verifyemail = async (req, res) => {
 };
 
 const get = async (req, res) => {
-  //TODO: Get user information from database
-  
-    console.log("success")
+  try {
+    const { queryBuilder } = req;
+    const user = await db.User.findOne(
+      { 
+        where: queryBuilder.filters,
+        attributes:{exclude:['password']}
+      });
+    return new Response(user).success(res);
+  } catch (err) {
+    console.error(err);
+    throw new APIError(err, 400);
+  }
+    
   };
 
 const update = async (req, res) => {
+  try {
+    const { queryBuilder } = req;
+    const { name, surname,settings,birth_date,photo,phone_number } = req.body;
+
+    const user = await db.User.findOne({ where: queryBuilder.filters });
+
+    if (!user) {
+      throw new APIError('User not found', 404);
+    }
+
+    if (name) user.name = name;
+    if (surname) user.surname = surname;
+    if (settings) user.settings = settings;
+    if (birth_date) user.birth_date = birth_date;
+    if (photo) user.photo = photo;
+    if (phone_number) user.phone_number = phone_number;
+    await user.save();
+
+    const response ={
+      message: 'User updated successfully',
+      user
+    }
+    return new Response(response).success(res);
+  } catch (error) {
+    console.error(error);
+    throw new APIError(error, 400);
+  }
 
 };
 

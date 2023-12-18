@@ -27,7 +27,7 @@ filtreler için group bylanması gereken alanlar;
 4. takım
 
 bir de sayısal veriler için greater than equal than(queryBuilderla oynaman lazım).
-account get
+account get //done
 change password
 mail verification
 
@@ -87,7 +87,6 @@ const getPlayerStatistics = async (req, res,next) => {
   try {
     const { queryBuilder } = req;
     const groupBy = queryBuilder.group;
-    console.log(groupBy)
     const excludedFields = {exclude:['createdAt', 'updatedAt','id']};
     const options = {
       where:  queryBuilder.filters,
@@ -163,9 +162,7 @@ const getPlayerStatistics = async (req, res,next) => {
         
       ],
       group:groupBy?.groupby?groupBy.groupby:null,
-      subQuery: false
     };
-    console.log(options.include[0].include)
     const playerStatistics = await db.general_player_statistic.findAll(options);
     if (!playerStatistics) {
       return res.status(404).json({ error: 'Player statistics not found' });
@@ -350,14 +347,8 @@ const savePlayerStatistics = async (req, res) => {
 
 
 const updatePlayerStatistics = async (req, res) => {
-  let data = {
-    name: "P. Kimpembe",
-    first_name: null,
-    last_name: null,
-    season:"2021"
-  }
-  const result = await getPlayerMarketValue(data);
-  console.log("result",result);
+  
+  
 };
 
 module.exports = {

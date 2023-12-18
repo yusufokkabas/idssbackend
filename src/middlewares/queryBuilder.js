@@ -57,6 +57,7 @@ const createQuery = async (req, res, next) => {
                 }
                 else{
                     group[fieldArray[1]] = [fieldArray[2]];
+                    
                 }
             }
           }

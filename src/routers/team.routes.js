@@ -5,10 +5,11 @@ const {
   saveTeams,
   updateTeams,
 } = require("../controllers/team.controller");
+const createQuery = require("../middlewares/queryBuilder");
 
 
 router.post("/save", saveTeams);
-router.get("/get", getTeams);
+router.get("/get", createQuery,getTeams);
 router.post("/update", updateTeams);
 
 // router.post("/verifyotp", verifyotp);

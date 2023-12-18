@@ -1,5 +1,6 @@
 const router = require("express").Router();
 const { tokenCheck,verifyEmail } = require("../middlewares/auth");
+const createQuery = require("../middlewares/queryBuilder");
 const {
     login,
     register,
@@ -9,8 +10,8 @@ const {
 
 router.post("/register",register);
 router.post("/login", login);
-router.get("/get",tokenCheck,get);
-router.post("/update",update);
+router.get("/get",createQuery,get);
+router.post("/update",createQuery,update);
 router.get("/test",tokenCheck);
 
 
