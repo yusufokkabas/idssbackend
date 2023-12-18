@@ -8,6 +8,7 @@ const createQuery = async (req, res, next) => {
       let { order } = query;
       let { filters } = query;
       let { fields } = query;
+      let {group} = query;
       if(fields){
         const fieldsArray = fields.split(',');
         fieldsArray.forEach((field) => {
@@ -42,12 +43,40 @@ const createQuery = async (req, res, next) => {
         }
         });
       }
+      if(group){
+        const groupArray = group.split(',');
+        group = {};
+        group['groupby']=groupArray;
+        groupArray.forEach((field) => {
+          if (field.includes('.')) {
+            const fieldArray = field.split('.');
+            const fieldArrayLength = fieldArray.length;
+            if(fieldArrayLength === 3){
+                if(fieldArray[0] in group){
+                    group[fieldArray[1]].push(fieldArray[2]);
+                }
+                else{
+                    group[fieldArray[1]] = [fieldArray[2]];
+                }
+            }
+          }
+          else{
+            if('general' in group){
+              group['general'].push(field);
+          }
+          else{
+              group['general'] = [field];
+          }
+          }
+        });       
+      }
       const queryBuilder = {
         limit: limit || 20,
         sort: sort || '',
         order: order || '',
         filters: filters || {},
         fields: fields || '',
+        group: group || null,
       };
       req.queryBuilder = queryBuilder;
       next();

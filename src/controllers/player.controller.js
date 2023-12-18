@@ -17,7 +17,21 @@ const csvtojson = require('csvtojson');
 const path = require('path');
 const fs = require('fs');
 const csv = require('csv-parser');
+const { group } = require("console");
+/*
 
+filtreler için group bylanması gereken alanlar;
+1. mevki
+2. lig
+3. ülke
+4. takım
+
+bir de sayısal veriler için greater than equal than(queryBuilderla oynaman lazım).
+account get
+change password
+mail verification
+
+*/
 function getPlayerMarketValue(player){
   return new Promise((resolve, reject) => {
     const csvFilePath = path.resolve(__dirname, 'valuations.csv');
@@ -72,81 +86,86 @@ function getPlayerMarketValue(player){
 const getPlayerStatistics = async (req, res,next) => {
   try {
     const { queryBuilder } = req;
-    const excludedFields = ['createdAt', 'updatedAt','id'];
+    const groupBy = queryBuilder.group;
+    console.log(groupBy)
+    const excludedFields = {exclude:['createdAt', 'updatedAt','id']};
     const options = {
       where:  queryBuilder.filters,
-      attributes:{exclude: ['statistics_id','createdAt', 'updatedAt']},
+      attributes:groupBy?groupBy.general?groupBy.general:[]:{exclude: ['statistics_id','createdAt', 'updatedAt']},
       include: [
         {
           model: db.player_statistics_by_season,
           as: 'statistics',
-          attributes: ['createdAt', 'updatedAt'],
+          attributes: groupBy?[]:['createdAt', 'updatedAt'],
           include: [
             {
               model: db.game_info,
               as: 'game_infos',
-              attributes:{exclude: excludedFields},
+              attributes:groupBy?groupBy.game_infos?groupBy.game_infos:[]:excludedFields,
             },
             {
               model: db.duel,
               as: 'duels',
-              attributes:{exclude: excludedFields},
+              attributes:groupBy?groupBy.duels?groupBy.duels:[]:excludedFields,
             },
             {
               model: db.foul,
               as: 'fouls',
-              attributes:{exclude: excludedFields},
+              attributes:groupBy?groupBy.fouls?groupBy.fouls:[]:excludedFields,
             },
             {
               model: db.card,
               as: 'cards',
-              attributes:{exclude: excludedFields},
+              attributes:groupBy?groupBy.cards?groupBy.cards:[]:excludedFields,
             },
             {
               model: db.dribble,
               as: 'dribbles',
-              attributes:{exclude: excludedFields},
+              attributes:groupBy?groupBy.dribbles?groupBy.dribbles:[]:excludedFields,
             },
             {
               model: db.goal,
               as: 'goals',
-              attributes:{exclude: excludedFields},
+              attributes:groupBy?groupBy.goals?groupBy.goals:[]:excludedFields,
             },
             {
               model: db.pass,
               as: 'passes',
-              attributes:{exclude: excludedFields},
+              attributes:groupBy?groupBy.passes?groupBy.passes:[]:excludedFields,
             },
             {
               model: db.penalty,
               as: 'penalties',
-              attributes:{exclude: excludedFields},
+              attributes:groupBy?groupBy.penalties?groupBy.penalties:[]:excludedFields,
             },
             {
               model: db.shot,
               as: 'shots',
-              attributes:{exclude: excludedFields},
+              attributes:groupBy?groupBy.shots?groupBy.shots:[]:excludedFields,
             },
             {
               model: db.substitute,
               as: 'substitutes',
-              attributes:{exclude: excludedFields},
+              attributes:groupBy?groupBy.substitutes?groupBy.substitutes:[]:excludedFields,
             },
             {
               model: db.tackle,
               as: 'tackles',
-              attributes:{exclude: excludedFields},
+              attributes:groupBy?groupBy.tackles?groupBy.tackles:[]:excludedFields,
             },
             {
               model: db.team,
               as: 'teams',
-              attributes:{exclude: excludedFields},
+              attributes:groupBy?groupBy.teams?groupBy.teams:[]:excludedFields,
             }
           ],
         },
         
       ],
+      group:groupBy?.groupby?groupBy.groupby:null,
+      subQuery: false
     };
+    console.log(options.include[0].include)
     const playerStatistics = await db.general_player_statistic.findAll(options);
     if (!playerStatistics) {
       return res.status(404).json({ error: 'Player statistics not found' });
