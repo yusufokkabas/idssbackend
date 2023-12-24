@@ -5,6 +5,7 @@ var axios = require('axios');
 const config = require('config')
 const sequelizeConfig = require("../../config/config.json");
 const db = require("../../models");
+const { Op } = require("sequelize");
 const sequelize = new Sequelize({
   dialect: sequelizeConfig.development.dialect,
   host: sequelizeConfig.development.host,
@@ -87,6 +88,7 @@ const getPlayerStatistics = async (req, res,next) => {
   try {
     const { queryBuilder } = req;
     const groupBy = queryBuilder.group;
+    console.log("qb",queryBuilder)
     const excludedFields = {exclude:['createdAt', 'updatedAt','id']};
     const options = {
       where:  queryBuilder.filters,
