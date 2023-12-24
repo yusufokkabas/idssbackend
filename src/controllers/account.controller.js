@@ -22,7 +22,6 @@ transporter.verify((error, success) => {
     console.log(error);
   } else {
     console.log("Ready for messages");
-    console.log(success);
   }
 });
 
@@ -117,16 +116,19 @@ const verifyemail = async (req, res) => {
   try {
     const {token} = req.query;
     const userToken = await db.users_mail_token.findOne({ where:{mail_token: token} });
-    if (userToken) {
-      userToken.mail_token = null;
+    console.log(userToken)
+    if (userToken&&userToken.verified==false) {
       userToken.verified = true;
       await userToken.save();
-      return new Response("Email verified successfully").success(res);
-    } else {
-      throw new Error("Email is not verified", 400);
+      res.render('emailVerification', { isSuccess:true, message: 'Email verified successfully!!' });
+    }else if(userToken&&userToken.verified==true){
+      res.render('emailVerification', { isSuccess:false, message: 'Email is already verified!!' });
+    }
+     else {
+      res.render('emailVerification', { isSuccess:false, message: 'Email can not be verified!!' });
     }
   } catch (error) {
-    throw new APIError(error, 400);
+    res.render('emailVerification', { isSuccess:false, message: error.message });
   }
 };
 
@@ -143,7 +145,6 @@ const get = async (req, res) => {
     console.error(err);
     throw new APIError(err, 400);
   }
-    
   };
 
 const update = async (req, res) => {

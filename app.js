@@ -19,7 +19,8 @@ app.get("/", (req, res) => {
     message: "Welcome",
   });
 });
-
+app.set('view engine', 'ejs');
+app.set('views', 'src/pages');
 //Exception handling
  app.use(errorHandlerMiddleware);
 
