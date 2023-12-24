@@ -14,23 +14,21 @@ const sequelize = new Sequelize({
   database: sequelizeConfig.development.database,
   logging: console.log
 });
-const csvtojson = require('csvtojson');
 const path = require('path');
 const fs = require('fs');
 const csv = require('csv-parser');
-const { group } = require("console");
 /*
 
 filtreler için group bylanması gereken alanlar;
-1. mevki
-2. lig
-3. ülke
-4. takım
+1. mevki //done
+2. lig //done
+3. ülke //done
+4. takım  //done
 
-bir de sayısal veriler için greater than equal than(queryBuilderla oynaman lazım).
+bir de sayısal veriler için greater than equal than(queryBuilderla oynaman lazım). //done
 account get //done
-change password
-mail verification
+change password //done
+mail verification //done
 
 */
 function getPlayerMarketValue(player){

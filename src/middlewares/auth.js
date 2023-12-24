@@ -73,27 +73,27 @@ const tokenCheck = async (req, res,next) => {
 }
 };
 
-const verifyEmail = async (req, res, next) => {
-  //try {
-  //const user = await User.findOne({ email: req.body.email });
-  //   if (user.isVerified) {
-  //     next();
-  //   } else {
-  //     throw res.status(401).json({
-  //       success: false,
-  //       message: "Please check your email to verify your account!",
-  //     });
-  //   }
-  // } catch (error) {
-  //   throw res.status(401).json({
-  //     success: false,
-  //     message: "No user found!",
-  //   });
-  // }
+const isVerifiedUser = async (req, res, next) => { 
+  try {
+  const token = await db.users_mail_token.findOne({ username: req.user });
+    if (token.verified) {
+      next();
+    } else {
+      res.status(401).json({
+        success: false,
+        message: "Please check your email to verify your account!",
+      });
+    }
+  } catch (error) {
+    res.status(401).json({
+      success: false,
+      message: "No user found!",
+    });
+  }
 };
 
 module.exports = {
   createToken,
   tokenCheck,
-  verifyEmail,
+  isVerifiedUser,
 };

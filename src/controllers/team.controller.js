@@ -4,7 +4,7 @@ var axios = require('axios');
 const config = require('config')
 const db = require("../../models");
 const team = db.general_team_info;
-
+const { Op } = require("sequelize");
 
 const saveTeams = async (req, res) => {  
   try {

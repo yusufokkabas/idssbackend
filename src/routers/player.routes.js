@@ -5,12 +5,12 @@ const {
   savePlayerStatistics,
   updatePlayerStatistics,
 } = require("../controllers/player.controller");
-const { tokenCheck } = require("../middlewares/auth");
+const { tokenCheck, isVerifiedUser } = require("../middlewares/auth");
 const createQuery = require("../middlewares/queryBuilder");
 
 
 router.post("/save", savePlayerStatistics);
-router.get("/get",createQuery ,getPlayerStatistics);
+router.get("/get",tokenCheck,isVerifiedUser,createQuery,getPlayerStatistics);
 router.post("/update", updatePlayerStatistics);
 
 // router.post("/verifyotp", verifyotp);

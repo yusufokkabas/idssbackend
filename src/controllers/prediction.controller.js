@@ -5,7 +5,7 @@ const config = require('config')
 const db = require("../../models");
 const model_metrics = db.model_metrics;
 const prediction_results = db.prediction_results;
-
+const { Op } = require("sequelize");
 const getPlayerPrediction = async (req, res) => {  
     try {
         const { queryBuilder } = req;
