@@ -75,7 +75,7 @@ const tokenCheck = async (req, res,next) => {
 
 const isVerifiedUser = async (req, res, next) => { 
   try {
-  const token = await db.users_mail_token.findOne({ username: req.user });
+  const token = await db.users_mail_token.findOne({where:{ username: req.user }});
     if (token.verified) {
       next();
     } else {

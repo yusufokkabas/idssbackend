@@ -16,6 +16,7 @@ const saveTeams = async (req, res) => {
       item.team.league_id = req.query.league;
       return item.team
     });
+    console.log(mappedData)
     const result = await team.bulkCreate(mappedData)
     .then(function(data){ 
       return new Response(`Successfully inserted ${data.length} records.`).success(res); 

@@ -156,6 +156,13 @@ const getPlayerStatistics = async (req, res,next) => {
               model: db.team,
               as: 'teams',
               attributes:groupBy?groupBy.teams?groupBy.teams:[]:excludedFields,
+              include: [
+                {
+                  model: db.general_team_info,
+                  as: 'generalTeamInfo',
+                  attributes:groupBy?groupBy.generalTeamInfo?groupBy.generalTeamInfo:[]:excludedFields,
+                },
+              ],
             }
           ],
         },
