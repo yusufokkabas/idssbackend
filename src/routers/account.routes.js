@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { tokenCheck,verifyEmail } = require("../middlewares/auth");
+const { tokenCheck,verifyEmail, isVerifiedUser } = require("../middlewares/auth");
 const createQuery = require("../middlewares/queryBuilder");
 const {
     login,
@@ -11,10 +11,10 @@ const {
 } = require("../controllers/account.controller");
 
 router.post("/register",tokenCheck,register);
-router.post("/login", tokenCheck,login);
-router.get("/get",tokenCheck,createQuery,get);
-router.post("/update",tokenCheck,createQuery,update);
-router.post("/changepassword",tokenCheck,createQuery,changePassword);
+router.post("/login", tokenCheck,isVerifiedUser,login);
+router.get("/get",tokenCheck,isVerifiedUser,createQuery,get);
+router.post("/update",tokenCheck,isVerifiedUser,createQuery,update);
+router.post("/changepassword",tokenCheck,isVerifiedUser,createQuery,changePassword);
 router.get("/test",tokenCheck);
 router.get("/verifyemail",verifyemail);
 

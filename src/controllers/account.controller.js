@@ -48,12 +48,13 @@ const login = async (req, res) => {
 
 const register = async (req, res) => {
   try {
-    let { username,name, surname, email, password } = req.body;
+    let { username,name, surname, email, password,photo } = req.body;
     username = username.trim();
     name = name.trim();
     surname = surname.trim();
     email = email.trim();
     password = password.trim();
+    photo = photo?.trim();
     const usernameCheck = await db.User.findOne({where: {username:username}});
     const emailCheck = await db.User.findOne({where: {email:email}});
     if (emailCheck||usernameCheck) {
@@ -67,6 +68,7 @@ const register = async (req, res) => {
       surname:surname,
       email:email,
       password:hashedPassword,
+      photo:photo?photo:null,
       //emailToken: crypto.randomBytes(64).toString("hex"),
     };
     const token = {
@@ -120,15 +122,15 @@ const verifyemail = async (req, res) => {
     if (userToken&&userToken.verified==false) {
       userToken.verified = true;
       await userToken.save();
-      res.render('emailVerification', { isSuccess:true, message: 'Email verified successfully!!' });
+      res.render('emailVerification', { isSuccess:true, message: 'Email verified successfully!!',loginRoute:config.FRONTEND_URL+"/login"});
     }else if(userToken&&userToken.verified==true){
-      res.render('emailVerification', { isSuccess:false, message: 'Email is already verified!!' });
+      res.render('emailVerification', { isSuccess:false, message: 'Email is already verified!!',loginRoute:null });
     }
      else {
-      res.render('emailVerification', { isSuccess:false, message: 'Email can not be verified!!' });
+      res.render('emailVerification', { isSuccess:false, message: 'Email can not be verified!!' ,loginRoute:null});
     }
   } catch (error) {
-    res.render('emailVerification', { isSuccess:false, message: error.message });
+    res.render('emailVerification', { isSuccess:false, message: error.message,loginRoute:null });
   }
 };
 
@@ -191,7 +193,7 @@ const changePassword = async (req, res) => {
       password,
       user.password
     );
-    if (!validatedUser) throw new APIError("Email or password is incorrect!", 401);
+    if (!validatedUser) throw new APIError("Password is incorrect!", 401);
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);

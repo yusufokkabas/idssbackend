@@ -10,5 +10,6 @@
     "AUTH_EMAIL":"yusufokkabas@gmail.com",
     "AUTH_PASS":"auqw ldcs xfjc cvif" ,
     "SECRET_KEY": "B59BCFC5C72AF81B900D3F20FA41BC13DAEF9A4107B0A608613C2D5E20B7AE15",
-    "EXPIRES_IN" : "2d"
+    "EXPIRES_IN" : "2d",
+    "FRONTEND_URL" : "http://localhost:3000"
 }
