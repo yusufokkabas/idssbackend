@@ -11,7 +11,7 @@ const {
 } = require("../controllers/account.controller");
 
 router.post("/register",register);
-router.post("/login",isVerifiedUser,login);
+router.post("/login",login);
 router.get("/get",tokenCheck,isVerifiedUser,createQuery,get);
 router.post("/update",tokenCheck,isVerifiedUser,createQuery,update);
 router.post("/changepassword",tokenCheck,isVerifiedUser,createQuery,changePassword);
