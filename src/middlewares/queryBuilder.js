@@ -89,6 +89,15 @@ const createQuery = async (req, res, next) => {
                   filters[field][Op.eq] = fieldArray[2];
                 }
               }
+              if(fieldArray[1] === 'like'){
+                if(field in filters){
+                    filters[field][Op.like] = `%${fieldArray[2]}%`;
+                }
+                else{
+                    filters[field] = {};
+                    filters[field][Op.like] = `%${fieldArray[2]}%`;
+                }
+            }
 
             }
           }

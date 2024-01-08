@@ -6,21 +6,38 @@ const db = require("../../models");
 const model_metrics = db.model_metrics;
 const prediction_results = db.prediction_results;
 const { Op } = require("sequelize");
+const sequelizeConfig = require("../../config/config.json");
+const Sequelize = require("sequelize");
+const sequelize = new Sequelize({
+  dialect: sequelizeConfig.development.dialect,
+  host: sequelizeConfig.development.host,
+  username: sequelizeConfig.development.username,
+  password: sequelizeConfig.development.password,
+  database: sequelizeConfig.development.database,
+  logging: console.log
+});
 const getPlayerPrediction = async (req, res) => {  
-    try {
-        const { queryBuilder } = req;
-        const options = {
-          where:  queryBuilder.filters      
-        };
-        const results = await prediction_results.findAll(options);
-        if (!results) {
-          return res.status(404).json({ error: 'Player statistics not found' });
-        }
-        return new Response(results).success(res);
-      } catch (error) {
-        console.error(error);
-        throw new APIError(error, 400);
-      }
+  try {
+    const { queryBuilder } = req;
+    const options = {
+      replacements: { filters: queryBuilder.filters },
+      type: sequelize.QueryTypes.SELECT
+    };
+    const query = `
+    SELECT *
+      FROM prediction_results pr
+      INNER JOIN general_player_statistics gps
+      ON pr.name = gps.name
+    `;
+    const results = await sequelize.query(query, options);
+    if (!results) {
+      return res.status(404).json({ error: 'Player statistics not found' });
+    }
+    return new Response(results).success(res);
+} catch (error) {
+    console.error(error);
+    throw new APIError(error, 400);
+}
 
   };
   
