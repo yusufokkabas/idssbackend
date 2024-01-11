@@ -18,17 +18,20 @@ const sequelize = new Sequelize({
 });
 const getPlayerPrediction = async (req, res) => {  
   try {
-    const { queryBuilder } = req;
-    const options = {
-      replacements: { filters: queryBuilder.filters },
+    const id = req.query.id;
+    var options = {
       type: sequelize.QueryTypes.SELECT
     };
-    const query = `
-    SELECT *
+    let query = `
+      SELECT *
       FROM prediction_results pr
       INNER JOIN general_player_statistics gps
       ON pr.name = gps.name
     `;
+    if(id){
+      query += 'WHERE gps.id = :id order by pr.prediction_model asc';
+      options.replacements = { id: id };
+    }
     const results = await sequelize.query(query, options);
     if (!results) {
       return res.status(404).json({ error: 'Player statistics not found' });
