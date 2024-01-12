@@ -88,7 +88,7 @@ const getPlayerStatistics = async (req, res,next) => {
     const groupBy = queryBuilder.group;
     console.log("qb",queryBuilder)
     const excludedFields = {exclude:['createdAt', 'updatedAt','id']};
-    const options = {
+    let options = {
       where:  queryBuilder.filters,
       attributes:groupBy?groupBy.general?groupBy.general:[]:{exclude: ['statistics_id','createdAt', 'updatedAt']},
       include: [
@@ -170,6 +170,12 @@ const getPlayerStatistics = async (req, res,next) => {
       ],
       group:groupBy?.groupby?groupBy.groupby:null,
     };
+    if(queryBuilder.limit){
+      options.limit = queryBuilder.limit;
+    }
+    if(queryBuilder.offset){
+      options.offset = queryBuilder.offset;
+    }
     const playerStatistics = await db.general_player_statistic.findAll(options);
     if (!playerStatistics) {
       return res.status(404).json({ error: 'Player statistics not found' });

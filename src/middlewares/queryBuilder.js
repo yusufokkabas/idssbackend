@@ -8,6 +8,7 @@ const createQuery = async (req, res, next) => {
       let { filters } = query;
       let { fields } = query;
       let {group} = query;
+      let { offset } = query;
       if(fields){
         const fieldsArray = fields.split(',');
         fieldsArray.forEach((field) => {
@@ -135,12 +136,13 @@ const createQuery = async (req, res, next) => {
         });       
       }
       const queryBuilder = {
-        limit: limit || 20,
+        limit: parseInt(limit) || null,
         sort: sort || '',
         order: order || '',
         filters: filters || {},
         fields: fields || '',
         group: group || null,
+        offset: parseInt(offset) || null,
       };
       req.queryBuilder = queryBuilder;
       next();
