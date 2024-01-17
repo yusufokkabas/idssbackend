@@ -11,10 +11,10 @@ const {
 } = require("../controllers/account.controller");
 
 router.post("/register",register);
-router.post("/login",login);
-router.get("/get",tokenCheck,isVerifiedUser,createQuery,get);
-router.post("/update",tokenCheck,isVerifiedUser,createQuery,update);
-router.post("/changepassword",tokenCheck,isVerifiedUser,createQuery,changePassword);
+router.post("/login",isVerifiedUser,login);
+router.get("/get",tokenCheck,createQuery,get);
+router.post("/update",tokenCheck,createQuery,update);
+router.post("/changepassword",tokenCheck,createQuery,changePassword);
 router.get("/test",tokenCheck);
 router.get("/verifyemail",verifyemail);
 
