@@ -1,9 +1,0 @@
-{
-    "development": {
-      "username": "idssdb",
-      "password": ".99#wA&47R",
-      "database": "idsscout",
-      "host": "idsscout.database.windows.net",
-      "dialect": "mssql"
-    }
-  }
