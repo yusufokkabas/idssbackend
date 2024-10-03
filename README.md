@@ -36,7 +36,7 @@ npx sequelize-cli db:migrate
 
 Technologies used in the project:
 
-*   Node.js
+*   Node.js(Express)
 *   EJS
 *   MySQL
 *   Sequelize.js(ORM)
